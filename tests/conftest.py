@@ -1,16 +1,12 @@
-import asyncio
-import json
-import os
-import random
-import unittest
-from datetime import datetime, timedelta
-
-import boto3
-import fakeredis
-import pytest
-from mock import MagicMock, Mock, patch
-from mockredis import mock_strict_redis_client
-from moto import (
+import asyncio,json, os, unittest
+from 
+datetime import datetime, timedelta, pytest
+from mock
+import MagicMock, Mock, patch
+from mockredis 
+  import mock_strict_redis_client
+from moto
+   import (
     mock_config,
     mock_dynamodb,
     mock_iam,
@@ -18,17 +14,13 @@ from moto import (
     mock_ses,
     mock_sns,
     mock_sqs,
-    mock_sts,
-)
-from tornado.concurrent import Future
-
+    mock_sts,)
+from tornado.concurrent
+   import Future
 # Unit tests will create mock resources in us-east-1
 os.environ["AWS_REGION"] = "us-east-1"
-
 # This must be set before loading ConsoleMe's configuration
-
 os.environ["CONFIG_LOCATION"] = "example_config/example_config_test.yaml"
-
 MOCK_ROLE = {
     "arn": "arn:aws:iam::123456789012:role/FakeRole",
     "name": "FakeRole",
@@ -46,8 +38,7 @@ MOCK_ROLE = {
                     "Sid": "2",
                     "Effect": "Allow",
                     "Principal": {"AWS": "arn:aws:iam::123456789012:role/FakeRole"},
-                    "Action": "sts:AssumeRole",
-                },
+                    "Action": "sts:AssumeRole"},
                 {
                     "Sid": "1",
                     "Effect": "Allow",
@@ -127,11 +118,10 @@ class AioTestCase(unittest.TestCase):
         attr = object.__getattribute__(self, item)
         if asyncio.iscoroutinefunction(attr):
             if item not in self._function_cache:
-                self._function_cache[item] = self.coroutine_function_decorator(attr)
+                self._function_cache[item] = 
+							self.coroutine_function_decorator(attr)
             return self._function_cache[item]
         return attr
-
-
 class MockBaseHandler:
     async def authorization_flow(
         self, user=None, console_only=True, refresh_cache=False
@@ -141,20 +131,15 @@ class MockBaseHandler:
         self.groups = ["group1", "group2"]
         self.contractor = False
         self.red = mock_strict_redis_client()
-
-
 class MockBaseMtlsHandler:
     async def authorization_flow_user(self):
         self.request_uuid = 1234
         self.ip = "1.2.3.4"
         self.requester = {"type": "user"}
-
     async def authorization_flow_app(self):
         self.request_uuid = 1234
         self.ip = "1.2.3.4"
         self.requester = {"type": "application", "name": "fakeapp"}
-
-
 class MockAuth:
     def __init__(
         self, restricted=False, compliance_restricted=False, get_groups_val=None
@@ -273,7 +258,8 @@ def s3(aws_credentials):
 
     with mock_s3():
         yield boto3.client(
-            "s3", region_name="us-east-1", **config.get("boto3.client_kwargs", {})
+            "s3", region_name="us-east-1", **config.get("boto3.client_kwargs", 
+																												{})
         )
 
 
@@ -284,7 +270,8 @@ def ses(aws_credentials):
 
     with mock_ses():
         client = boto3.client(
-            "ses", region_name="us-east-1", **config.get("boto3.client_kwargs", {})
+            "ses", region_name="us-east-1", **config.get("boto3.client_kwargs", 
+																												 {})
         )
         client.verify_email_address(EmailAddress="consoleme_test@example.com")
         yield client
@@ -313,7 +300,8 @@ def sns(aws_credentials):
 
 
 @pytest.fixture(autouse=True, scope="session")
-def create_default_resources(s3, iam, redis, iam_sync_principals, iamrole_table):
+def create_default_resources(s3, iam, redis, iam_sync_principals, 
+														 iamrole_table):
     from asgiref.sync import async_to_sync
 
     from consoleme.config import config
@@ -331,12 +319,14 @@ def create_default_resources(s3, iam, redis, iam_sync_principals, iamrole_table)
                 "cache_iam_resources_across_accounts.all_roles_combined.s3.bucket"
             ),
             s3_key=config.get(
-                "cache_iam_resources_across_accounts.all_roles_combined.s3.file",
+                
+							"cache_iam_resources_across_accounts.all_roles_combined.s3.file",
                 "account_resource_cache/cache_all_roles_v1.json.gz",
             ),
         )
         return
-    from consoleme.celery_tasks.celery_tasks import cache_iam_resources_for_account
+    from consoleme.celery_tasks.celery_tasks import 
+															 cache_iam_resources_for_account
     from consoleme.lib.account_indexers import get_account_id_to_name_mapping
     from consoleme.lib.redis import RedisHandler
 
@@ -345,21 +335,18 @@ def create_default_resources(s3, iam, redis, iam_sync_principals, iamrole_table)
     accounts_d = async_to_sync(get_account_id_to_name_mapping)()
     for account_id in accounts_d.keys():
         cache_iam_resources_for_account(account_id)
-
     cache_key = config.get("aws.iamroles_redis_key", "IAM_ROLE_CACHE")
     all_roles = red.hgetall(cache_key)
     async_to_sync(store_json_results_in_redis_and_s3)(
         all_roles,
         s3_bucket=config.get(
-            "cache_iam_resources_across_accounts.all_roles_combined.s3.bucket"
+					"cache_iam_resources_across_accounts.all_roles_combined.s3.bucket"
         ),
         s3_key=config.get(
             "cache_iam_resources_across_accounts.all_roles_combined.s3.file",
             "account_resource_cache/cache_all_roles_v1.json.gz",
         ),
     )
-
-
 @pytest.fixture(autouse=True, scope="session")
 def dynamodb(aws_credentials):
     """Mocked DynamoDB Fixture."""
@@ -534,7 +521,8 @@ def sqs_queue(sqs):
                 "userIdentity": {
                     "type": "AssumedRole",
                     "principalId": "ABC123:i-12345",
-                    "arn": "arn:aws:sts::123456789012:assumed-role/aRole/thatDoesSomething",
+                    "arn": "arn:aws:sts::123456789012:assumed-
+										role/aRole/thatDoesSomething",
                     "accountId": "123456789012",
                     "accessKeyId": "ACCESS_KEY",
                     "sessionContext": {
@@ -557,10 +545,13 @@ def sqs_queue(sqs):
                 "eventName": "TagRole",
                 "awsRegion": "us-east-1",
                 "sourceIPAddress": "1.2.3.4",
-                "userAgent": "Boto3/1.18.36 Python/3.7.11 Linux/4.14.243-194.434.amzn2.x86_64 exec-env/AWS_Lambda_python3.7 Botocore/1.21.36",
+                "userAgent": "Boto3/1.18.36 Python/3.7.11 Linux/4.14.243-
+								194.434.amzn2.x86_64 exec-env/AWS_Lambda_python3.7 
+				Botocore/1.21.36",
                 "requestParameters": {
                     "roleName": "abcrole",
-                    "tags": [{"key": "1", "value": "1"}, {"key": "2", "value": "2"}],
+                    "tags": [{"key": "1", "value": "1"}, {"key": "2", "value": 
+																													"2"}],
                 },
                 "responseElements": None,
                 "requestID": "11111-f97e-413d-ba51-299816b1bd0d",
@@ -595,14 +586,16 @@ def sqs_queue(sqs):
                         "userIdentity": {
                             "type": "AssumedRole",
                             "principalId": "principalId",
-                            "arn": "arn:aws:sts::123456789012:assumed-role/roleA/instanceId",
+                            "arn": "arn:aws:sts::123456789012:assumed-
+														role/roleA/instanceId",
                             "accountId": "123456789012",
                             "accessKeyId": "ASIASFT37IGO3U7IQ5RA",
                             "sessionContext": {
                                 "sessionIssuer": {
                                     "type": "Role",
                                     "principalId": "principalId",
-                                    "arn": "arn:aws:iam::123456789012:role/roleA",
+                                    "arn": 
+																	"arn:aws:iam::123456789012:role/roleA",
                                     "accountId": "123456789012",
                                     "userName": "roleA",
                                 },
@@ -643,14 +636,13 @@ def sqs_queue(sqs):
     )
     sqs.send_message(QueueUrl=queue_url["QueueUrl"], MessageBody=message)
     yield sqs
-
-
 @pytest.fixture(autouse=True, scope="session")
 def policy_requests_table(dynamodb):
     # Create the table:
     dynamodb.create_table(
         TableName="consoleme_policy_requests",
-        KeySchema=[{"AttributeName": "request_id", "KeyType": "HASH"}],  # Partition key
+        KeySchema=[{"AttributeName": "request_id", 
+										"KeyType": "HASH"}],  # Partition key
         AttributeDefinitions=[
             {"AttributeName": "request_id", "AttributeType": "S"},
             {"AttributeName": "arn", "AttributeType": "S"},
@@ -666,7 +658,8 @@ def policy_requests_table(dynamodb):
                 },
             }
         ],
-        ProvisionedThroughput={"ReadCapacityUnits": 10, "WriteCapacityUnits": 10},
+        ProvisionedThroughput={"ReadCapacityUnits": 10,
+															 "WriteCapacityUnits": 10},
     )
 
     yield dynamodb
@@ -677,9 +670,11 @@ def requests_table(dynamodb):
     # Create the table:
     dynamodb.create_table(
         TableName="consoleme_requests_global",
-        AttributeDefinitions=[{"AttributeName": "request_id", "AttributeType": "S"}],
+        AttributeDefinitions=[{"AttributeName": "request_id", 
+															 "AttributeType": "S"}],
         KeySchema=[{"AttributeName": "request_id", "KeyType": "HASH"}],
-        ProvisionedThroughput={"ReadCapacityUnits": 1000, "WriteCapacityUnits": 1000},
+        ProvisionedThroughput={"ReadCapacityUnits": 1000,
+															 "WriteCapacityUnits": 1000},
     )
 
     yield dynamodb
@@ -690,9 +685,11 @@ def users_table(dynamodb):
     # Create the table:
     dynamodb.create_table(
         TableName="consoleme_users_global",
-        AttributeDefinitions=[{"AttributeName": "username", "AttributeType": "S"}],
+        AttributeDefinitions=[{"AttributeName":
+															 "username", "AttributeType": "S"}],
         KeySchema=[{"AttributeName": "username", "KeyType": "HASH"}],
-        ProvisionedThroughput={"ReadCapacityUnits": 1000, "WriteCapacityUnits": 1000},
+        ProvisionedThroughput={"ReadCapacityUnits": 1000,
+															 "WriteCapacityUnits": 1000},
     )
 
     yield dynamodb
@@ -931,8 +928,6 @@ def www_user():
         "Tags": []
     }"""
     )
-
-
 fakeredis_server = fakeredis.FakeServer()
 
 fake_redis = fakeredis.FakeRedis(server=fakeredis_server, decode_responses=True)
@@ -940,8 +935,6 @@ fake_redis = fakeredis.FakeRedis(server=fakeredis_server, decode_responses=True)
 fake_strict_redis = fakeredis.FakeStrictRedis(
     server=fakeredis_server, decode_responses=True
 )
-
-
 @pytest.fixture(autouse=True, scope="session")
 def redis(session_mocker):
     from consoleme.config import config
@@ -954,7 +947,9 @@ def redis(session_mocker):
     session_mocker.patch(
         "consoleme.lib.redis.redis.StrictRedis", return_value=fake_strict_redis
     )
-    session_mocker.patch("consoleme.lib.redis.redis.Redis", return_value=fake_redis)
+    session_mocker.patch
+	("consoleme.lib.redis.redis.Redis",
+	 return_value=fake_redis)
     session_mocker.patch(
         "consoleme.lib.redis.RedisHandler.redis_sync", return_value=fake_redis
     )
@@ -962,8 +957,6 @@ def redis(session_mocker):
         "consoleme.lib.redis.RedisHandler.redis", return_value=fake_redis
     )
     return True
-
-
 class MockParliament:
     def __init__(self, return_value=None):
         self.return_value = return_value
@@ -971,8 +964,6 @@ class MockParliament:
     @property
     def findings(self):
         return self.return_value
-
-
 class Finding:
     issue = ""
     detail = ""
@@ -980,7 +971,6 @@ class Finding:
     severity = ""
     title = ""
     description = ""
-
     def __init__(
         self,
         issue,
@@ -996,8 +986,6 @@ class Finding:
         self.severity = severity
         self.title = title
         self.description = description
-
-
 @pytest.fixture(scope="session")
 def parliament(session_mocker):
     session_mocker.patch(
@@ -1010,14 +998,15 @@ def parliament(session_mocker):
                     "severity": "MEDIUM",
                     "description": "",
                     "detail": [
-                        {"action": "s3:GetObject", "required_format": "arn:*:s3:::*/*"}
+											{"action": "s3:GetObject", "required_format": 
+											 "arn:*:s3:::*/*"}
                     ],
-                    "location": {"line": 3, "column": 18, "filepath": "test.json"},
+                    "location": {"line": 3,
+																 "column": 18, "filepath": "test.json"},
                 }
             ]
         ),
     )
-
     session_mocker.patch(
         "parliament.enhance_finding",
         return_value=Finding(
@@ -1029,12 +1018,9 @@ def parliament(session_mocker):
             location={},
         ),
     )
-
-
 @pytest.fixture(scope="session")
 def user_iam_role(iamrole_table, www_user):
     from consoleme.lib.dynamo import IAMRoleDynamoHandler
-
     ddb = IAMRoleDynamoHandler()
     role_entry = {
         "arn": www_user.pop("Arn"),
@@ -1044,8 +1030,6 @@ def user_iam_role(iamrole_table, www_user):
         "policy": ddb.convert_iam_resource_to_json(www_user),
     }
     ddb.sync_iam_role_for_account(role_entry)
-
-
 @pytest.fixture(autouse=True, scope="session")
 def mock_exception_stats():
     p = patch("consoleme.exceptions.exceptions.get_plugin_by_name")
@@ -1053,30 +1037,19 @@ def mock_exception_stats():
     yield p.start()
 
     p.stop()
-
-
 @pytest.fixture(autouse=True, scope="session")
 def mock_celery_stats(mock_exception_stats):
     p = patch("consoleme.celery_tasks.celery_tasks.stats")
-
-    yield p.start()
-
+   yield p.start()
     p.stop()
-
-
 @pytest.fixture(scope="session")
 def mock_async_http_client():
     p_return_value = Mock()
     p_return_value.body = "{}"
-    p = patch("tornado.httpclient.AsyncHTTPClient")
-
+    p = patch("tornado.httpclient.AsyncHTTPClient"
     p.return_value.fetch.return_value = p_return_value
-
     yield p.start()
-
     p.stop()
-
-
 @pytest.fixture(autouse=True, scope="session")
 def populate_caches(
     redis,
@@ -1101,11 +1074,9 @@ def populate_caches(
         celery_tasks as default_celery_tasks,
     )
     from consoleme.lib.account_indexers import get_account_id_to_name_mapping
-
     celery.cache_cloud_account_mapping()
     accounts_d = async_to_sync(get_account_id_to_name_mapping)()
     default_celery_tasks.cache_application_information()
-
     for account_id in accounts_d.keys():
         celery.cache_iam_resources_for_account(account_id)
         celery.cache_s3_buckets_for_account(account_id)
@@ -1118,31 +1089,23 @@ def populate_caches(
     celery.cache_iam_resources_across_accounts()
     celery.cache_policies_table_details()
     celery.cache_policy_requests()
-    celery.cache_credential_authorization_mapping()
-
-
+    celery.cache_credential_authorization_mapping()l
 class MockAioHttpResponse:
     status = 200
     responses = []
-
     @classmethod
     async def json(cls):
         try:
             return cls.responses.pop(0)
         except Exception:  # noqa
             return []
-
-
 class MockAioHttpRequest:
     @classmethod
     async def get(cls, *args, **kwargs):
-        return MockAioHttpResponse()
-
-    @classmethod
+    return MockAioHttpResponse()
+  @classmethod
     async def post(cls, *args, **kwargs):
         return MockAioHttpResponse()
-
-
 def create_future(ret_val=None):
     future = Future()
     future.set_result(ret_val)
